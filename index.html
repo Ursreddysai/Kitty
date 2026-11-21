@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kitty AI Assistant</title>
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --panel: #131a26;
+      --panel-2: #1a2436;
+      --text: #eef3fb;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-2: #22c55e;
+      --danger: #ef4444;
+      --border: #263248;
+    }
+    body.light {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --panel-2: #eef2f7;
+      --text: #0f172a;
+      --muted: #475569;
+      --accent: #0284c7;
+      --accent-2: #16a34a;
+      --danger: #dc2626;
+      --border: #cbd5e1;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-2);
+    }
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    button, input, select {
+      font-family: inherit;
+      color: var(--text);
+    }
+    .btn {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      padding: 7px 11px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.88rem;
+    }
+    .btn:hover { border-color: var(--accent); }
+    .btn.primary {
+      background: var(--accent);
+      color: #061018;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+    .btn.active {
+      background: var(--accent-2);
+      color: #06180d;
+      border-color: var(--accent-2);
+      font-weight: 600;
+    }
+    .tabs {
+      display: flex;
+      gap: 6px;
+      padding: 10px 16px 0;
+      background: var(--bg);
+      flex-wrap: wrap;
+    }
+    .tab {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 10px 10px 0 0;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .tab.active {
+      background: var(--panel-2);
+      color: var(--text);
+      border-bottom-color: var(--panel-2);
+      font-weight: 600;
+    }
+    main {
+      flex: 1;
+      padding: 16px;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .view { display: none; flex-direction: column; gap: 14px; flex: 1; }
+    .view.active { display: flex; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .chat-box {
+      flex: 1;
+      min-height: 320px;
+      max-height: 55vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .msg {
+      max-width: 84%;
+      padding: 10px 13px;
+      border-radius: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg.user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: #061018;
+      font-weight: 500;
+    }
+    .msg.bot {
+      align-self: flex-start;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+    }
+    .composer {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .composer input[type="text"] {
+      flex: 1;
+      padding: 11px 13px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      font-size: 0.96rem;
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .item {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .muted { color: var(--muted); font-size: 0.88rem; }
+    .calc-display {
+      width: 100%;
+      padding: 12px;
+      font-size: 1.3rem;
+      text-align: right;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      margin-bottom: 10px;
+    }
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .calc-grid button {
+      padding: 12px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      cursor: pointer;
+    }
+    .alarm-banner {
+      display: none;
+      background: #2a1014;
+      border: 1px solid var(--danger);
+      color: #fecaca;
+      padding: 12px 14px;
+      border-radius: 10px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .alarm-banner.show { display: flex; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="dot" id="statusDot"></span>
+      <span>Kitty</span>
+      <span class="muted" id="modeBadge">Local Smart</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn" id="micBtn" onclick="toggleMic()">Mic Off</button>
+      <button class="btn" id="muteBtn" onclick="toggleMute()">Voice On</button>
+      <button class="btn" onclick="toggleTheme()">Theme</button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="chat" onclick="switchTab('chat')">Chat</button>
+    <button class="tab" data-tab="reminders" onclick="switchTab('reminders')">Reminders</button>
+    <button class="tab" data-tab="memory" onclick="switchTab('memory')">Memory</button>
+    <button class="tab" data-tab="tools" onclick="switchTab('tools')">Tools</button>
+    <button class="tab" data-tab="settings" onclick="switchTab('settings')">Settings</button>
+  </div>
+
+  <main>
+    <div class="alarm-banner" id="alarmBanner">
+      <div>
+        <strong>Reminder Alert:</strong>
+        <span id="alarmText">Time up!</span>
+      </div>
+      <button class="btn primary" onclick="stopAlarm()">Stop Sound</button>
+    </div>
+
+    <section class="view active" id="view-chat">
+      <div class="chat-box" id="chatBox"></div>
+      <div class="composer">
+        <input type="text" id="chatInput" placeholder="Matladandi / Type cheyandi..." onkeydown="if(event.key==='Enter') sendMessage()" />
+        <button class="btn primary" onclick="sendMessage()">Send</button>
+      </div>
+    </section>
+
+    <section class="view" id="view-reminders">
+      <div class="card">
+        <h3>Set Reminder (Alarm / Custom Music)</h3>
+        <div class="row">
+          <input type="text" id="remTitle" placeholder="Reminder peru (e.g. Medicine)" style="flex:1; min-width:180px; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--panel-2);" />
+          <input type="datetime-local" id="remTime" style="padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--panel-2);" />
+          <button class="btn primary" onclick="addReminderUI()">Add</button>
+        </div>
+        <div class="row">
+          <label class="muted">Custom Audio (.mp3/.wav): <input type="file" id="customAudioInput" accept="audio/*" onchange="handleAudioFile(event)" /></label>
+          <span class="muted" id="audioStatus">Default tone</span>
+        </div>
+        <div class="list" id="reminderList"></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-memory">
+      <div class="card">
+        <h3>Gurthu Pettuko Memory Vault</h3>
+        <p class="muted">Chat lo "Gurthu pettuko..." ani cheppina automatic ga ikkada save avuthundi.</p>
+        <div class="row">
+          <input type="text" id="memInput" placeholder="Kotha memory add cheyandi..." style="flex:1; min-width:200px; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--panel-2);" />
+          <button class="btn primary" onclick="addMemoryUI()">Save</button>
+        </div>
+        <div class="list" id="memoryList"></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-tools">
+      <div class="card">
+        <h3>Calculator</h3>
+        <input type="text" class="calc-display" id="calcDisplay" value="0" readonly />
+        <div class="calc-grid">
+          <button onclick="calcPress('C')">C</button>
+          <button onclick="calcPress('(')">(</button>
+          <button onclick="calcPress(')')">)</button>
+          <button onclick="calcPress('/')">÷</button>
+          <button onclick="calcPress('7')">7</button>
+          <button onclick="calcPress('8')">8</button>
+          <button onclick="calcPress('9')">9</button>
+          <button onclick="calcPress('*')">×</button>
+          <button onclick="calcPress('4')">4</button>
+          <button onclick="calcPress('5')">5</button>
+          <button onclick="calcPress('6')">6</button>
+          <button onclick="calcPress('-')">−</button>
+          <button onclick="calcPress('1')">1</button>
+          <button onclick="calcPress('2')">2</button>
+          <button onclick="calcPress('3')">3</button>
+          <button onclick="calcPress('+')">+</button>
+          <button onclick="calcPress('0')">0</button>
+          <button onclick="calcPress('.')">.</button>
+          <button onclick="calcBack()">⌫</button>
+          <button onclick="calcSolve()">=</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-settings">
+      <div class="card">
+        <h3>AI Brain & Privacy Settings</h3>
+        <p class="muted">Default ga local ga work avuthundi. Kavali anukunte Gemini API or Ollama connect chesukovachu.</p>
+        <div class="row">
+          <label class="muted">Brain Mode:</label>
+          <select id="brainMode" onchange="saveSettings()" style="padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--panel-2);">
+            <option value="local">Local Smart (No Server)</option>
+            <option value="gemini">Gemini API</option>
+            <option value="ollama">Ollama Server</option>
+          </select>
+        </div>
+        <div class="row">
+          <input type="password" id="geminiKey" placeholder="Gemini API Key (Optional)" onchange="saveSettings()" style="flex:1; min-width:220px; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--panel-2);" />
+        </div>
+        <div class="row">
+          <input type="text" id="ollamaUrl" placeholder="Ollama URL (e.g. http://localhost:11434)" onchange="saveSettings()" style="flex:1; min-width:220px; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--panel-2);" />
+          <input type="text" id="ollamaModel" placeholder="Model (e.g. llama3.2)" onchange="saveSettings()" style="width:160px; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--panel-2);" />
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const state = {
+      memories: JSON.parse(localStorage.getItem('kitty_memories') || '[]'),
+      reminders: JSON.parse(localStorage.getItem('kitty_reminders') || '[]'),
+      settings: JSON.parse(localStorage.getItem('kitty_settings') || '{"brain":"local","geminiKey":"","ollamaUrl":"http://localhost:11434","ollamaModel":"llama3.2","theme":"dark","muted":false}'),
+      customAudioData: localStorage.getItem('kitty_custom_audio') || '',
+      customAudioName: localStorage.getItem('kitty_custom_audio_name') || '',
+      listening: false,
+      recognition: null,
+      audioCtx: null,
+      oscTimer: null,
+      player: null
+    };
+
+    function saveAll() {
+      localStorage.setItem('kitty_memories', JSON.stringify(state.memories));
+      localStorage.setItem('kitty_reminders', JSON.stringify(state.reminders));
+      localStorage.setItem('kitty_settings', JSON.stringify(state.settings));
+    }
+
+    function applyThemeAndHeader() {
+      document.body.classList.toggle('light', state.settings.theme === 'light');
+      document.getElementById('muteBtn').textContent = state.settings.muted ? 'Voice Off' : 'Voice On';
+      const labels = { local: 'Local Smart', gemini: 'Gemini API', ollama: 'Ollama' };
+      document.getElementById('modeBadge').textContent = labels[state.settings.brain] || 'Local Smart';
+      document.getElementById('brainMode').value = state.settings.brain || 'local';
+      document.getElementById('geminiKey').value = state.settings.geminiKey || '';
+      document.getElementById('ollamaUrl').value = state.settings.ollamaUrl || 'http://localhost:11434';
+      document.getElementById('ollamaModel').value = state.settings.ollamaModel || 'llama3.2';
+      if (state.customAudioName) {
+        document.getElementById('audioStatus').textContent = 'Custom: ' + state.customAudioName;
+      }
+    }
+
+    function toggleTheme() {
+      state.settings.theme = state.settings.theme === 'light' ? 'dark' : 'light';
+      saveAll();
+      applyThemeAndHeader();
+    }
+
+    function toggleMute() {
+      state.settings.muted = !state.settings.muted;
+      if (state.settings.muted && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      saveAll();
+      applyThemeAndHeader();
+    }
+
+    function saveSettings() {
+      state.settings.brain = document.getElementById('brainMode').value;
+      state.settings.geminiKey = document.getElementById('geminiKey').value.trim();
+      state.settings.ollamaUrl = document.getElementById('ollamaUrl').value.trim() || 'http://localhost:11434';
+      state.settings.ollamaModel = document.getElementById('ollamaModel').value.trim() || 'llama3.2';
+      saveAll();
+      applyThemeAndHeader();
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-' + tabName).classList.add('active');
+      if (tabName === 'memory') renderMemories();
+      if (tabName === 'reminders') renderReminders();
+    }
+
+    function detectLang(text) {
+      if (/[\u0C00-\u0C7F]/.test(text)) return 'te-IN';
+      if (/[\u0900-\u097F]/.test(text)) return 'hi-IN';
+      const lower = text.toLowerCase();
+      if (/\b(naku|cheppu|gurthu|pettuko|ela|undhi|enti|namaskaram|bagunnava)\b/.test(lower)) return 'te-IN';
+      if (/\b(kya|hai|hoon|yaad|rakhna|batao|kaise|namaste)\b/.test(lower)) return 'hi-IN';
+      return 'en-IN';
+    }
+
+    function speak(text, lang) {
+      if (state.settings.muted || !('speechSynthesis' in window)) return;
+      try {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = lang || 'en-IN';
+        window.speechSynthesis.speak(utter);
+      } catch (e) {}
+    }
+
+    function addBubble(text, sender, lang) {
+      const box = document.getElementById('chatBox');
+      const div = document.createElement('div');
+      div.className = 'msg ' + sender;
+      div.textContent = text;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      if (sender === 'bot') speak(text, lang);
+    }
+
+    function handleAudioFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        state.customAudioData = String(reader.result || '');
+        state.customAudioName = file.name;
+        try {
+          localStorage.setItem('kitty_custom_audio', state.customAudioData);
+          localStorage.setItem('kitty_custom_audio_name', state.customAudioName);
+        } catch (e) {
+          addBubble('Audio file size peddadhi ga undhi; session lo work avuthundi.', 'bot', 'te-IN');
+        }
+        document.getElementById('audioStatus').textContent = 'Custom: ' + file.name;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function playAlarmSound() {
+      stopAlarm();
+      document.getElementById('alarmBanner').classList.add('show');
+      if (state.customAudioData) {
+        try {
+          state.player = new Audio(state.customAudioData);
+          state.player.loop = true;
+          state.player.play().catch(() => startBeepFallback());
+          return;
+        } catch (e) {}
+      }
+      startBeepFallback();
+    }
+
+    function startBeepFallback() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        state.audioCtx = new AudioCtx();
+        const beep = () => {
+          if (!state.audioCtx) return;
+          const osc = state.audioCtx.createOscillator();
+          const gain = state.audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = 880;
+          gain.gain.value = 0.2;
+          osc.connect(gain);
+          gain.connect(state.audioCtx.destination);
+          osc.start();
+          setTimeout(() => osc.stop(), 350);
+        };
+        beep();
+        state.oscTimer = setInterval(beep, 1000);
+      } catch (e) {}
+    }
+
+    function stopAlarm() {
+      document.getElementById('alarmBanner').classList.remove('show');
+      if (state.oscTimer) {
+        clearInterval(state.oscTimer);
+        state.oscTimer = null;
+      }
+      if (state.audioCtx) {
+        try { state.audioCtx.close(); } catch (e) {}
+        state.audioCtx = null;
+      }
+      if (state.player) {
+        try { state.player.pause(); state.player.currentTime = 0; } catch (e) {}
+        state.player = null;
+      }
+    }
+
+    function addReminder(title, timestampMs) {
+      const id = Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      state.reminders.push({ id, title: title || 'Reminder', time: timestampMs, triggered: false });
+      state.reminders.sort((a, b) => a.time - b.time);
+      saveAll();
+      renderReminders();
+    }
+
+    function addReminderUI() {
+      const title = document.getElementById('remTitle').value.trim();
+      const dtVal = document.getElementById('remTime').value;
+      if (!dtVal) return;
+      const ms = new Date(dtVal).getTime();
+      if (isNaN(ms)) return;
+      addReminder(title || 'Reminder', ms);
+      document.getElementById('remTitle').value = '';
+    }
+
+    function deleteReminder(id) {
+      state.reminders = state.reminders.filter(r => r.id !== id);
+      saveAll();
+      renderReminders();
+    }
+
+    function renderReminders() {
+      const list = document.getElementById('reminderList');
+      list.innerHTML = '';
+      if (!state.reminders.length) {
+        list.innerHTML = '<div class="muted">Reminders em levu.</div>';
+        return;
+      }
+      state.reminders.forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        const d = new Date(r.time).toLocaleString();
+        div.innerHTML = `<div><strong>${escapeHtml(r.title)}</strong><div class="muted">${escapeHtml(d)} ${r.triggered ? '(Done)' : ''}</div></div>`;
+        const del = document.createElement('button');
+        del.className = 'btn';
+        del.textContent = 'Delete';
+        del.onclick = () => deleteReminder(r.id);
+        div.appendChild(del);
+        list.appendChild(div);
+      });
+    }
+
+    setInterval(() => {
+      const now = Date.now();
+      let changed = false;
+      state.reminders.forEach(r => {
+        if (!r.triggered && now >= r.time) {
+          r.triggered = true;
+          changed = true;
+          document.getElementById('alarmText').textContent = r.title;
+          playAlarmSound();
+          addBubble('Reminder: ' + r.title, 'bot', 'te-IN');
+        }
+      });
+      if (changed) {
+        saveAll();
+        renderReminders();
+      }
+    }, 1000);
+
+    function saveMemory(text) {
+      const clean = text.trim();
+      if (!clean) return;
+      state.memories.unshift({ id: Date.now(), text: clean, date: new Date().toLocaleString() });
+      saveAll();
+      renderMemories();
+    }
+
+    function addMemoryUI() {
+      const inp = document.getElementById('memInput');
+      if (!inp.value.trim()) return;
+      saveMemory(inp.value);
+      inp.value = '';
+    }
+
+    function deleteMemory(id) {
+      state.memories = state.memories.filter(m => m.id !== id);
+      saveAll();
+      renderMemories();
+    }
+
+    function renderMemories() {
+      const list = document.getElementById('memoryList');
+      list.innerHTML = '';
+      if (!state.memories.length) {
+        list.innerHTML = '<div class="muted">Inka memories em save avaledhu.</div>';
+        return;
+      }
+      state.memories.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `<div><div>${escapeHtml(m.text)}</div><div class="muted">${escapeHtml(m.date)}</div></div>`;
+        const del = document.createElement('button');
+        del.className = 'btn';
+        del.textContent = 'Delete';
+        del.onclick = () => deleteMemory(m.id);
+        div.appendChild(del);
+        list.appendChild(div);
+      });
+    }
+
+    function parseReminderCommand(text) {
+      const minMatch = text.match(/(\d+)\s*(min|mins|minute|minutes|nimisham|nimishalu|minut)/i);
+      if (minMatch && /(gurthu|remind|alarm|set)/i.test(text)) {
+        const mins = parseInt(minMatch[1], 10);
+        const label = text.replace(minMatch[0], '').replace(/(gurthu\s*chei|remind\s*me|alarm|set)/gi, '').trim() || (mins + ' mins reminder');
+        return { time: Date.now() + mins * 60000, label };
+      }
+      const timeMatch = text.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
+      if (timeMatch && /(gurthu|remind|alarm|ki|ko|at)/i.test(text)) {
+        let h = parseInt(timeMatch[1], 10);
+        const m = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+        const ap = (timeMatch[3] || '').toLowerCase();
+        if (ap === 'pm' && h < 12) h += 12;
+        if (ap === 'am' && h === 12) h = 0;
+        const target = new Date();
+        target.setHours(h, m, 0, 0);
+        if (target.getTime() <= Date.now()) target.setDate(target.getDate() + 1);
+        const label = text.replace(timeMatch[0], '').replace(/(gurthu\s*chei|remind\s*me|alarm|ki|ko|at)/gi, '').trim() || 'Reminder';
+        return { time: target.getTime(), label };
+      }
+      return null;
+    }
+
+    async function askExternalBrain(prompt) {
+      if (state.settings.brain === 'gemini' && state.settings.geminiKey) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(state.settings.geminiKey)}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+        const data = await res.json();
+        return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Reply raledhu.';
+      }
+      if (state.settings.brain === 'ollama') {
+        const base = (state.settings.ollamaUrl || 'http://localhost:11434').replace(/\/+$/, '');
+        const model = state.settings.ollamaModel || 'llama3.2';
+        const res = await fetch(base + '/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model, prompt, stream: false })
+        });
+        const data = await res.json();
+        return data?.response || 'Ollama nunchi reply raledhu.';
+      }
+      return null;
+    }
+
+    async function generateReply(rawText, lang) {
+      const text = rawText.trim();
+      const lower = text.toLowerCase();
+
+      if (/^(hi|hello|hey|namaskaram|namaste|vanakkam|yo)\b/i.test(lower)) {
+        if (lang === 'te-IN') return 'Hi! Nenu Kitty. Cheppandi, em sahayam kavali?';
+        if (lang === 'hi-IN') return 'Hi! Main Kitty hoon. Bataiye, main kya madad kar sakti hoon?';
+        return 'Hi! I am Kitty. How can I help you?';
+      }
+
+      const memMatch = text.match(/(?:gurthu\s*pettuko|gurthupettuko|remember\s*that|yaad\s*rakhna)\s*(.*)/i);
+      if (memMatch && memMatch[1] && memMatch[1].trim()) {
+        saveMemory(memMatch[1].trim());
+        return 'Gurthu pettukunnanu: "' + memMatch[1].trim() + '"';
+      }
+
+      const rem = parseReminderCommand(text);
+      if (rem) {
+        addReminder(rem.label, rem.time);
+        return 'Reminder set chesanu: "' + rem.label + '" at ' + new Date(rem.time).toLocaleTimeString();
+      }
+
+      if (/(em\s*gurthu|what\s*do\s*you\s*remember|kya\s*yaad\s*hai)/i.test(lower)) {
+        if (!state.memories.length) return 'Inka memories em save avaledhu.';
+        return 'Naaku gurthunnayi:\n' + state.memories.slice(0, 6).map(m => '• ' + m.text).join('\n');
+      }
+
+      if (/^(time|ippudu\s*time\s*entha|samayam\s*entha|kya\s*time\s*hua)\b/i.test(lower)) {
+        return 'Ippudu time: ' + new Date().toLocaleTimeString();
+      }
+
+      if (state.settings.brain === 'gemini' || state.settings.brain === 'ollama') {
+        try {
+          const ext = await askExternalBrain(text);
+          if (ext) return ext;
+        } catch (e) {
+          return 'Server connect avvaledhu (' + (e.message || 'error') + '). Settings lo check cheyandi.';
+        }
+      }
+
+      const matchedMem = state.memories.find(m => m.text.toLowerCase().includes(lower));
+      if (matchedMem) {
+        return 'Memory lo idhi undhi: ' + matchedMem.text;
+      }
+
+      if (lang === 'te-IN') return 'Arthamayyindi: "' + text + '". Ippudu local mode lo unnanu — reminder, memory, leda Settings lo API/Ollama set chesi inkonchem details adagachu.';
+      if (lang === 'hi-IN') return 'Samajh gayi: "' + text + '". Abhi main local mode mein hoon — reminder, yaad rakhne ki cheez, ya Settings mein API/Ollama jod kar aur pooch sakte hain.';
+      return 'Got it: "' + text + '". Currently running in Local Smart mode—you can set reminders, save memories, or connect Gemini/Ollama in Settings.';
+    }
+
+    async function sendMessage(overrideText) {
+      const input = document.getElementById('chatInput');
+      const text = (typeof overrideText === 'string' ? overrideText : input.value).trim();
+      if (!text) return;
+      if (typeof overrideText !== 'string') input.value = '';
+      const lang = detectLang(text);
+      addBubble(text, 'user', lang);
+      const reply = await generateReply(text, lang);
+      addBubble(reply, 'bot', lang);
+    }
+
+    function toggleMic() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        addBubble('Ee browser lo speech recognition support ledhu.', 'bot', 'te-IN');
+        return;
+      }
+      if (state.listening && state.recognition) {
+        state.recognition.stop();
+        state.listening = false;
+        document.getElementById('micBtn').textContent = 'Mic Off';
+        document.getElementById('micBtn').classList.remove('active');
+        return;
+      }
+      const rec = new SR();
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      rec.onresult = (ev) => {
+        const spoken = ev.results[0][0].transcript;
+        sendMessage(spoken);
+      };
+      rec.onerror = () => {
+        state.listening = false;
+        document.getElementById('micBtn').textContent = 'Mic Off';
+        document.getElementById('micBtn').classList.remove('active');
+      };
+      rec.onend = () => {
+        state.listening = false;
+        document.getElementById('micBtn').textContent = 'Mic Off';
+        document.getElementById('micBtn').classList.remove('active');
+      };
+      state.recognition = rec;
+      state.listening = true;
+      document.getElementById('micBtn').textContent = 'Listening...';
+      document.getElementById('micBtn').classList.add('active');
+      rec.start();
+    }
+
+    function calcPress(val) {
+      const disp = document.getElementById('calcDisplay');
+      if (val === 'C') { disp.value = '0'; return; }
+      if (disp.value === '0' && !['+', '-', '*', '/', ')'].includes(val)) disp.value = val;
+      else disp.value += val;
+    }
+
+    function calcBack() {
+      const disp = document.getElementById('calcDisplay');
+      disp.value = disp.value.length > 1 ? disp.value.slice(0, -1) : '0';
+    }
+
+    function calcSolve() {
+      const disp = document.getElementById('calcDisplay');
+      const expr = disp.value.replace(/[^0-9+\-*/().]/g, '');
+      try {
+        const result = Function('"use strict"; return (' + expr + ')')();
+        disp.value = Number.isFinite(result) ? String(result) : 'Error';
+      } catch (e) {
+        disp.value = 'Error';
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    applyThemeAndHeader();
+    renderMemories();
+    renderReminders();
+    addBubble('Hi! Nenu Kitty. PIN lock ledhu, main screen clean ga undi — "hi" ani cheppandi, reminder set cheyandi, leda "Gurthu pettuko..." ani cheppandi.', 'bot', 'te-IN');
+  </script>
+</body>
+</html>
